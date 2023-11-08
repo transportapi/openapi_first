@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'multi_json'
+require 'rj_schema'
 require_relative 'use_router'
 require_relative 'validation_format'
 
@@ -40,11 +41,12 @@ module OpenapiFirst
       full_body = +''
       response.each { |chunk| full_body << chunk }
       data = full_body.empty? ? {} : load_json(full_body)
-      errors = schema.validate(data)
-      errors = errors.to_a.map! do |error|
-        format_error(error)
-      end
-      raise ResponseBodyInvalidError, errors.join(', ') if errors.any?
+
+      error = RjSchema::Validator.new.validate(
+        schema.raw_schema, data, continue_on_error: true, machine_errors: false, human_errors: true
+      )[:human_errors]
+
+      raise ::OpenapiFirst::ResponseBodyInvalidError, error unless error.nil? || error.empty?
     end
 
     def format_error(error)
