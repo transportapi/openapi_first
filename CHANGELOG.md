@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.0.0
+- Use rj_schema gem for response body json validation
+
+  BREAKING CHANGE: After this change validating against schemas with `nullable` will not work correctly.
+  The definitions should be modified to use oneOf element with a childred "null" and the original type to achive the same effect. 
+
 ## 0.21.0
 
 - Fix: Query parameter validation does not fail if header parameters are defined (Thanks to [JF Lalonde](https://github.com/JF-Lalonde))
