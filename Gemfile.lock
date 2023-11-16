@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    openapi_first (0.21.0)
+    openapi_first (1.0.0)
       deep_merge (>= 1.2.1)
       hanami-router (~> 2.0.0)
       hanami-utils (~> 2.0.0)
@@ -37,7 +37,7 @@ GEM
       dry-transformer (~> 1.0, < 2)
     hansi (0.2.1)
     json (2.6.3)
-    json_refs (0.1.7)
+    json_refs (0.1.8)
       hana
     json_schemer (0.2.24)
       ecma-re-validator (~> 0.3)
@@ -94,7 +94,7 @@ GEM
     ruby2_keywords (0.0.5)
     unicode-display_width (2.4.2)
     uri_template (0.7.0)
-    zeitwerk (2.6.7)
+    zeitwerk (2.6.12)
 
 PLATFORMS
   arm64-darwin-21
