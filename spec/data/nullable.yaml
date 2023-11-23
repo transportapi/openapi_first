@@ -30,7 +30,6 @@ components:
         - name
       properties:
         name:
-          oneOf:
-            - type: string
-            - type: 'null'
+          type: string
+          nullable: true
 
