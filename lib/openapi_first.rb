@@ -30,6 +30,7 @@ module OpenapiFirst
       JsonRefs.call(content, resolve_local_ref: true, resolve_file_ref: true)
     end
     resolved['paths'].filter!(&->(key, _) { only.call(key) }) if only
+    add_null_types!(resolved)
     Definition.new(resolved, spec_path)
   end
 
@@ -67,6 +68,21 @@ module OpenapiFirst
       response_validation: response_validation
     )
   end
+
+  def self.add_null_types!(schema_hash)
+    # end of recursion condition
+    return unless schema_hash.is_a?(Hash)
+
+    if schema_hash['nullable']
+      type = schema_hash.delete('type')
+      schema_hash['oneOf'] = [{ 'type' => 'null' }, { 'type' => type }] if type
+    end
+    schema_hash.each_value do |sub_schema|
+      add_null_types!(sub_schema)
+    end
+  end
+
+  private_class_method :add_null_types!
 
   class AppWithOptions
     def initialize(spec, options)

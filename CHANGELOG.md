@@ -2,11 +2,14 @@
 
 ## Unreleased
 
+## 1.1.0
+- Add null type for schemas with `nullable` types while loading the schema.
+
 ## 1.0.0
 - Use rj_schema gem for response body json validation
 
   BREAKING CHANGE: After this change validating against schemas with `nullable` will not work correctly.
-  The definitions should be modified to use oneOf element with a childred "null" and the original type to achive the same effect. 
+  The definitions should be modified to use oneOf element with a childred "null" and the original type to achieve the same effect. 
 
 ## 0.21.0
 
