@@ -34,6 +34,7 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 3.0.5'
 
+  spec.add_runtime_dependency 'activesupport', '>= 7.1'
   spec.add_runtime_dependency 'deep_merge', '>= 1.2.1'
   spec.add_runtime_dependency 'hanami-router', '~> 2.0.0'
   spec.add_runtime_dependency 'hanami-utils', '~> 2.0.0'

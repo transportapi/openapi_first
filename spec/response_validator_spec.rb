@@ -103,4 +103,83 @@ RSpec.describe OpenapiFirst::ResponseValidator do
       end.to raise_error OpenapiFirst::ResponseInvalid
     end
   end
+
+  describe 'XML response validation' do
+    let(:xml_spec) { './spec/data/petstore-xml.yaml' }
+
+    let(:xml_validator) do
+      described_class.new(xml_spec)
+    end
+
+    let(:xml_headers) { { Rack::CONTENT_TYPE => 'application/xml' } }
+
+    let(:xml_request) do
+      env = Rack::MockRequest.env_for('/pets')
+      Rack::Request.new(env)
+    end
+
+    describe 'valid XML response' do
+      it 'validates valid XML response' do
+        response_body = <<~XML
+          <pets>
+            <pet>
+              <id>42</id>
+              <name>hans</name>
+            </pet>
+            <pet>
+              <id>2</id>
+              <name>Voldemort</name>
+            </pet>
+          </pets>
+        XML
+        response = Rack::MockResponse.new(200, xml_headers, response_body)
+        xml_validator.validate(xml_request, response)
+      end
+
+      it 'accepts additional XML elements' do
+        response_body = <<~XML
+          <pets>
+            <pet>
+              <id>42</id>
+              <name>hans</name>
+              <tag>extra</tag>
+            </pet>
+          </pets>
+        XML
+        response = Rack::MockResponse.new(200, xml_headers, response_body)
+        xml_validator.validate(xml_request, response)
+      end
+    end
+
+    describe 'invalid XML response' do
+      it 'fails on missing required XML elements' do
+        response_body = <<~XML
+          <pets>
+            <pet>
+              <id>42</id>
+            </pet>
+          </pets>
+        XML
+        response = Rack::MockResponse.new(200, xml_headers, response_body)
+        expect do
+          xml_validator.validate(xml_request, response)
+        end.to raise_error OpenapiFirst::ResponseInvalid
+      end
+
+      it 'fails on unknown status code' do
+        response_body = <<~XML
+          <pets>
+            <pet>
+              <id>42</id>
+              <name>hans</name>
+            </pet>
+          </pets>
+        XML
+        response = Rack::MockResponse.new(204, xml_headers, response_body)
+        expect do
+          xml_validator.validate(xml_request, response)
+        end.to raise_error OpenapiFirst::ResponseInvalid
+      end
+    end
+  end
 end

@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'active_support/isolated_execution_state'
+require 'active_support/xml_mini'
+require 'active_support/core_ext/hash/conversions'
 require 'multi_json'
 require 'rj_schema'
 require_relative 'use_router'
@@ -28,7 +31,7 @@ module OpenapiFirst
 
       content_type = headers[Rack::CONTENT_TYPE]
       response_schema = operation.response_schema_for(status, content_type)
-      validate_response_body(response_schema, body) if response_schema
+      validate_response_body(response_schema, body, content_type) if response_schema
     end
 
     private
@@ -37,10 +40,21 @@ module OpenapiFirst
       operation.response_for(status)
     end
 
-    def validate_response_body(schema, response)
+    def xml_content?(content_type)
+      media_type = content_type.split(';').first.strip
+      %w[application/xml text/xml].include?(media_type)
+    end
+
+    def validate_response_body(schema, response, content_type)
       full_body = +''
       response.each { |chunk| full_body << chunk }
-      data = full_body.empty? ? {} : load_json(full_body)
+      data = if full_body.empty?
+               {}
+             elsif xml_content?(content_type)
+               Hash.from_xml(full_body)
+             else
+               load_json(full_body)
+             end
 
       error = RjSchema::Validator.new.validate(
         schema.raw_schema, data, continue_on_error: true, machine_errors: false, human_errors: true
