@@ -81,6 +81,7 @@ components:
       required:
         - id
         - name
+        - status
       properties:
         id:
           type: string
@@ -90,6 +91,15 @@ components:
           type: string
           xml:
             name: name
+        status:
+          type: string
+          xml:
+            name: status
+            attribute: true
+          enum:
+            - available
+            - pending
+            - sold
         tag:
           type: string
           xml:
