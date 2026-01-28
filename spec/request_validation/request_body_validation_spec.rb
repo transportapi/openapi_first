@@ -355,31 +355,9 @@ RSpec.describe 'Request body validation' do
     end
 
     describe 'XML request body coercion' do
-      class XmlParserMiddleware # rubocop:disable Lint/ConstantDefinitionInBlock
-        def initialize(app)
-          @app = app
-        end
-
-        def call(env)
-          request = Rack::Request.new(env)
-          puts "Content-Type: #{request.content_type}"
-          puts "Body: #{request.body.read.inspect}"
-          request.body.rewind
-
-          if request.content_type&.include?('xml')
-            body = request.body.read
-            request.body.rewind
-            parsed = Hash.from_xml(body) if body.present?
-            env['router.parsed_body'] = parsed if parsed
-          end
-          @app.call(env)
-        end
-      end
-
       let(:app) do
         Rack::Builder.new do
           use OpenapiFirst::Router, spec: './spec/data/petstore-xml.yaml', raise_error: true
-          use XmlParserMiddleware
           use OpenapiFirst::RequestValidation
           run lambda { |env|
             # Convert the parsed/coerced request body back to JSON for test verification.
