@@ -42,7 +42,8 @@ module OpenapiFirst
     end
 
     def validate_response_body(schema, response, content_type)
-      full_body = response.to_a.join
+      full_body = +''
+      response.each { |chunk| full_body << chunk }
       data = if full_body.empty?
                {}
              elsif XmlCoercion.xml_content_type?(content_type)
