@@ -303,7 +303,7 @@ RSpec.describe 'Request body validation' do
       end
     end
 
-    describe 'with a readOnly required field' do
+    describe 'with a required readOnly field' do
       let(:app) do
         Rack::Builder.new do
           use OpenapiFirst::Router, spec: './spec/data/readonly.yaml', raise_error: true
@@ -351,6 +351,92 @@ RSpec.describe 'Request body validation' do
         }
         post '/test', json_dump(request_body)
         expect(last_response.status).to eq 201
+      end
+    end
+
+    describe 'XML request body coercion' do
+      class XmlParserMiddleware # rubocop:disable Lint/ConstantDefinitionInBlock
+        def initialize(app)
+          @app = app
+        end
+
+        def call(env)
+          request = Rack::Request.new(env)
+          puts "Content-Type: #{request.content_type}"
+          puts "Body: #{request.body.read.inspect}"
+          request.body.rewind
+
+          if request.content_type&.include?('xml')
+            body = request.body.read
+            request.body.rewind
+            parsed = Hash.from_xml(body) if body.present?
+            env['router.parsed_body'] = parsed if parsed
+          end
+          @app.call(env)
+        end
+      end
+
+      let(:app) do
+        Rack::Builder.new do
+          use OpenapiFirst::Router, spec: './spec/data/petstore-xml.yaml', raise_error: true
+          use XmlParserMiddleware
+          use OpenapiFirst::RequestValidation
+          run lambda { |env|
+            # Convert the parsed/coerced request body back to JSON for test verification.
+            # This allows us to inspect that XML string values (e.g., "42") were properly
+            # coerced to their schema types (e.g., integer 42) during request validation.
+            [200, {}, [MultiJson.dump(env[OpenapiFirst::REQUEST_BODY])]]
+          }
+        end
+      end
+
+      it 'coerces XML string values to proper types' do
+        xml_body = <<~XML
+          <pet status="available">
+            <id>42</id>
+            <name>Fluffy</name>
+          </pet>
+        XML
+
+        header Rack::CONTENT_TYPE, 'application/xml'
+        post '/pets', xml_body
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed_response = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed_response[:pet][:id]).to eq(42)
+        expect(parsed_response[:pet][:status]).to eq('available')
+      end
+
+      it 'preserves additional properties not in schema' do
+        xml_body = <<~XML
+          <pet status="available">
+            <id>42</id>
+            <name>Fluffy</name>
+            <extra>additional data</extra>
+          </pet>
+        XML
+
+        header Rack::CONTENT_TYPE, 'application/xml'
+        post '/pets', xml_body
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed_response = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed_response[:pet][:extra]).to eq('additional data')
+      end
+
+      it 'validates coerced values against schema' do
+        xml_body = <<~XML
+          <pet status="available">
+            <id>not-a-number</id>
+            <name>Fluffy</name>
+          </pet>
+        XML
+
+        header Rack::CONTENT_TYPE, 'application/xml'
+        post '/pets', xml_body
+
+        # Should fail validation because 'not-a-number' can't be coerced to integer
+        expect(last_response.status).to eq(400)
       end
     end
 

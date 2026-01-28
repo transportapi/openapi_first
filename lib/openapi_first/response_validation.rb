@@ -7,6 +7,7 @@ require 'multi_json'
 require 'rj_schema'
 require_relative 'use_router'
 require_relative 'validation_format'
+require_relative 'xml_coercion'
 
 module OpenapiFirst
   class ResponseValidation
@@ -40,18 +41,13 @@ module OpenapiFirst
       operation.response_for(status)
     end
 
-    def xml_content?(content_type)
-      media_type = content_type.split(';').first.strip
-      %w[application/xml text/xml].include?(media_type)
-    end
-
     def validate_response_body(schema, response, content_type)
-      full_body = +''
-      response.each { |chunk| full_body << chunk }
+      full_body = response.to_a.join
       data = if full_body.empty?
                {}
-             elsif xml_content?(content_type)
-               Hash.from_xml(full_body)
+             elsif XmlCoercion.xml_content_type?(content_type)
+               parsed = Hash.from_xml(full_body)
+               XmlCoercion.coerce_types(parsed, schema.raw_schema)
              else
                load_json(full_body)
              end

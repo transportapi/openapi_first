@@ -36,7 +36,7 @@ paths:
         content:
           application/xml:
             schema:
-              $ref: "#/components/schemas/PetXml"
+              $ref: "#/components/schemas/PetRequest"
       responses:
         '201':
           description: Null response
@@ -74,6 +74,13 @@ paths:
                 $ref: "#/components/schemas/ErrorXml"
 components:
   schemas:
+    PetRequest:
+      type: object
+      properties:
+        pet:
+          $ref: '#/components/schemas/PetXml'
+      required:
+        - pet
     PetXml:
       type: object
       xml:
@@ -84,7 +91,7 @@ components:
         - status
       properties:
         id:
-          type: string
+          type: integer
           xml:
             name: id
         name:
