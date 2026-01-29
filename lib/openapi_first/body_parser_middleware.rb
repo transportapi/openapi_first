@@ -45,7 +45,7 @@ module OpenapiFirst
       return request.POST if request.form_data?
 
       body
-    rescue MultiJson::ParseError => e
+    rescue MultiJson::ParseError, REXML::ParseException, Nokogiri::XML::SyntaxError => e
       raise BodyParsingError, e
     end
 
