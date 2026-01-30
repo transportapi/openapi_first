@@ -368,7 +368,7 @@ RSpec.describe 'Request body validation' do
         end
       end
 
-      it 'coerces XML string values to proper types' do
+      it 'coerces XML string element values to proper types' do
         xml_body = <<~XML
           <pet status="available">
             <id>42</id>
@@ -376,13 +376,26 @@ RSpec.describe 'Request body validation' do
           </pet>
         XML
 
-        header Rack::CONTENT_TYPE, 'application/xml'
-        post '/pets', xml_body
+        perform_pets_post_request(xml_body)
 
         expect(last_response.status).to eq(200), last_response.body
         parsed_response = json_load(last_response.body, symbolize_keys: true)
         expect(parsed_response[:pet][:id]).to eq(42)
         expect(parsed_response[:pet][:status]).to eq('available')
+      end
+
+      it 'coerces XML string attribute values to proper types' do
+        xml_body = <<~XML
+          <pet status="available" id="42">
+            <name>Fluffy</name>
+          </pet>
+        XML
+
+        perform_pets_post_request(xml_body)
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed_response = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed_response[:pet][:id]).to eq(42)
       end
 
       it 'preserves additional properties not in schema' do
@@ -394,8 +407,7 @@ RSpec.describe 'Request body validation' do
           </pet>
         XML
 
-        header Rack::CONTENT_TYPE, 'application/xml'
-        post '/pets', xml_body
+        perform_pets_post_request(xml_body)
 
         expect(last_response.status).to eq(200), last_response.body
         parsed_response = json_load(last_response.body, symbolize_keys: true)
@@ -410,11 +422,15 @@ RSpec.describe 'Request body validation' do
           </pet>
         XML
 
-        header Rack::CONTENT_TYPE, 'application/xml'
-        post '/pets', xml_body
+        perform_pets_post_request(xml_body)
 
         # Should fail validation because 'not-a-number' can't be coerced to integer
         expect(last_response.status).to eq(400)
+      end
+
+      def perform_pets_post_request(xml_body)
+        header Rack::CONTENT_TYPE, 'application/xml'
+        post '/pets', xml_body
       end
     end
 

@@ -114,7 +114,7 @@ RSpec.describe OpenapiFirst::ResponseValidator do
     let(:xml_headers) { { Rack::CONTENT_TYPE => 'application/xml' } }
 
     let(:xml_request) do
-      env = Rack::MockRequest.env_for('/pets')
+      env = Rack::MockRequest.env_for('/pets', method: 'GET')
       Rack::Request.new(env)
     end
 

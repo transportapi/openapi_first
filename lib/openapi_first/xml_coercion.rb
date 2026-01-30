@@ -9,7 +9,7 @@ module OpenapiFirst
     def xml_content_type?(content_type)
       return false unless content_type
 
-      media_type = content_type.split(';').first.strip
+      media_type = content_type.split(';').first&.strip
       %w[application/xml text/xml].include?(media_type)
     end
 
@@ -40,7 +40,7 @@ module OpenapiFirst
       end.merge(data.except(*schema['properties'].keys))
     end
 
-    def coerce_with_one_of(value, schema)
+    private_class_method def coerce_with_one_of(value, schema)
       schemas = schema['oneOf'] || schema['anyOf'] || schema['allOf']
 
       # For Hash (single item), try the first schema (should be the object schema)
@@ -58,7 +58,7 @@ module OpenapiFirst
       value
     end
 
-    def coerce_array(array, schema)
+    private_class_method def coerce_array(array, schema)
       return array unless schema['items']
 
       array.map do |item|
@@ -66,7 +66,7 @@ module OpenapiFirst
       end
     end
 
-    def coerce_item(item, schema)
+    private_class_method def coerce_item(item, schema)
       if schema['properties'] && item.is_a?(Hash)
         coerce_types(item, schema)
       else
