@@ -16,7 +16,7 @@ module OpenapiFirst
       value
     end
 
-    def to_boolean(value)
+    private_class_method def to_boolean(value)
       return true if value == 'true'
       return false if value == 'false'
 

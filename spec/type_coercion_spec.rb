@@ -20,6 +20,10 @@ RSpec.describe OpenapiFirst::TypeCoercion do
       it 'returns original value for nil' do
         expect(described_class.coerce_value(nil, schema)).to be_nil
       end
+
+      it 'returns original value for uppercase value' do
+        expect(described_class.coerce_value('FALSE', schema)).to eq('FALSE')
+      end
     end
 
     context 'when schema type is integer' do
@@ -104,46 +108,6 @@ RSpec.describe OpenapiFirst::TypeCoercion do
       it 'returns original value without coercion' do
         expect(described_class.coerce_value('value', schema)).to eq('value')
       end
-    end
-  end
-
-  describe '.to_boolean' do
-    it 'converts "true" string to true' do
-      expect(described_class.to_boolean('true')).to be true
-    end
-
-    it 'converts "false" string to false' do
-      expect(described_class.to_boolean('false')).to be false
-    end
-
-    it 'returns original value for "True" with capital T' do
-      expect(described_class.to_boolean('True')).to eq('True')
-    end
-
-    it 'returns original value for "FALSE" in uppercase' do
-      expect(described_class.to_boolean('FALSE')).to eq('FALSE')
-    end
-
-    it 'returns original value for non-boolean strings' do
-      expect(described_class.to_boolean('yes')).to eq('yes')
-    end
-
-    it 'returns original value for empty string' do
-      expect(described_class.to_boolean('')).to eq('')
-    end
-
-    it 'returns original value for nil' do
-      expect(described_class.to_boolean(nil)).to be_nil
-    end
-
-    it 'returns original value for numeric values' do
-      expect(described_class.to_boolean(1)).to eq(1)
-      expect(described_class.to_boolean(0)).to eq(0)
-    end
-
-    it 'returns original value for actual boolean values' do
-      expect(described_class.to_boolean(true)).to be true
-      expect(described_class.to_boolean(false)).to be false
     end
   end
 end
