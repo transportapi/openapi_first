@@ -266,29 +266,105 @@ RSpec.describe OpenapiFirst::XmlCoercion do
     end
 
     context 'with allOf schema' do
+      # allOf means the value must satisfy ALL schemas simultaneously
+      # This is typically used to combine properties from multiple schemas
       let(:schema) do
         {
           'properties' => {
-            'item' => {
+            'user' => {
               'allOf' => [
-                { 'type' => 'object', 'properties' => { 'num' => { 'type' => 'integer' } } },
-                { 'type' => 'array', 'items' => { 'type' => 'integer' } }
+                {
+                  'type' => 'object',
+                  'properties' => {
+                    'id' => { 'type' => 'integer' },
+                    'name' => { 'type' => 'string' }
+                  }
+                },
+                {
+                  'type' => 'object',
+                  'properties' => {
+                    'active' => { 'type' => 'boolean' },
+                    'age' => { 'type' => 'integer' }
+                  }
+                }
               ]
             }
           }
         }
       end
 
-      it 'handles hash value' do
-        data = { 'item' => { 'num' => '99' } }
+      it 'merges properties from all schemas and coerces them' do
+        data = {
+          'user' => {
+            'id' => '123',
+            'name' => 'Alice',
+            'active' => 'true',
+            'age' => '30'
+          }
+        }
         result = described_class.coerce_types(data, schema)
-        expect(result['item']['num']).to eq(99)
+
+        # All properties from both schemas should be coerced
+        expect(result['user']['id']).to eq(123)
+        expect(result['user']['name']).to eq('Alice')
+        expect(result['user']['active']).to be true
+        expect(result['user']['age']).to eq(30)
       end
 
-      it 'handles array value' do
-        data = { 'item' => %w[7 8] }
+      it 'handles partial data with properties from first schema' do
+        data = { 'user' => { 'id' => '99', 'name' => 'Bob' } }
         result = described_class.coerce_types(data, schema)
-        expect(result['item']).to eq([7, 8])
+
+        expect(result['user']['id']).to eq(99)
+        expect(result['user']['name']).to eq('Bob')
+      end
+
+      it 'handles partial data with properties from second schema' do
+        data = { 'user' => { 'active' => 'false', 'age' => '25' } }
+        result = described_class.coerce_types(data, schema)
+
+        expect(result['user']['active']).to be false
+        expect(result['user']['age']).to eq(25)
+      end
+
+      context 'with three schemas in allOf' do
+        let(:schema) do
+          {
+            'properties' => {
+              'product' => {
+                'allOf' => [
+                  {
+                    'type' => 'object',
+                    'properties' => { 'id' => { 'type' => 'integer' } }
+                  },
+                  {
+                    'type' => 'object',
+                    'properties' => { 'price' => { 'type' => 'number' } }
+                  },
+                  {
+                    'type' => 'object',
+                    'properties' => { 'inStock' => { 'type' => 'boolean' } }
+                  }
+                ]
+              }
+            }
+          }
+        end
+
+        it 'merges properties from all three schemas' do
+          data = {
+            'product' => {
+              'id' => '456',
+              'price' => '29.99',
+              'inStock' => 'true'
+            }
+          }
+          result = described_class.coerce_types(data, schema)
+
+          expect(result['product']['id']).to eq(456)
+          expect(result['product']['price']).to eq(29.99)
+          expect(result['product']['inStock']).to be true
+        end
       end
     end
 

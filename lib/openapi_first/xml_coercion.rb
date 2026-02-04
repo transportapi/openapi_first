@@ -23,7 +23,7 @@ module OpenapiFirst
 
         # Check if this property has oneOf/anyOf/allOf
         result[key] = if property_schema['oneOf'] || property_schema['anyOf'] || property_schema['allOf']
-                        coerce_with_one_of(value, property_schema)
+                        coerce_with_combined_schemas(value, property_schema)
                       elsif property_schema['properties'] && value.is_a?(Hash)
                         # Nested object - recurse
                         coerce_types(value, property_schema)
@@ -40,18 +40,26 @@ module OpenapiFirst
       end.merge(data.except(*schema['properties'].keys))
     end
 
-    private_class_method def coerce_with_one_of(value, schema)
-      schemas = schema['oneOf'] || schema['anyOf'] || schema['allOf']
+    private_class_method def coerce_with_combined_schemas(value, schema)
+      # Special handling for allOf - merge all schemas together
+      if schema['allOf']
+        schemas = schema['allOf']
+        merged_properties = schemas.each_with_object({}) do |s, props|
+          props.merge!(s['properties']) if s['properties']
+        end
+        merged_schema = { 'type' => 'object', 'properties' => merged_properties }
+        return coerce_item(value, merged_schema)
+      end
 
-      # For Hash (single item), try the first schema (should be the object schema)
-      # For Array, try the second schema (should be the array schema)
+      # For oneOf/anyOf, pick the appropriate schema based on value type
+      schemas = schema['oneOf'] || schema['anyOf']
+
       case value
       when Array
         array_schema = schemas.find { |s| s['type'] == 'array' }
         return coerce_array(value, array_schema) if array_schema
       when Hash
         object_schema = schemas.find { |s| s['type'] != 'array' }
-        # Need to resolve $ref here - for now just try to coerce
         return coerce_item(value, object_schema) if object_schema
       end
 
