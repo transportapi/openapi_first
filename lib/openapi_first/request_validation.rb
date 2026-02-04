@@ -5,6 +5,8 @@ require 'multi_json'
 require_relative 'inbox'
 require_relative 'use_router'
 require_relative 'validation_format'
+require_relative 'xml_coercion'
+require_relative 'type_coercion'
 
 module OpenapiFirst
   class RequestValidation # rubocop:disable Metrics/ClassLength
@@ -15,7 +17,7 @@ module OpenapiFirst
       @raise = options.fetch(:raise_error, false)
     end
 
-    def call(env) # rubocop:disable Metrics/AbcSize
+    def call(env)
       operation = env[OPERATION]
       return @app.call(env) unless operation
 
@@ -54,6 +56,11 @@ module OpenapiFirst
 
       schema = operation&.request_body_schema(request.content_type)
       return unless schema
+
+      # Convert XML string values to proper types based on schema
+      if XmlCoercion.xml_content_type?(request.content_type) && body.is_a?(Hash)
+        body = XmlCoercion.coerce_types(body, schema.raw_schema)
+      end
 
       errors = schema.validate(body)
       throw_error(400, serialize_request_body_errors(errors)) if errors.any?
@@ -118,13 +125,13 @@ module OpenapiFirst
     def filtered_params(json_schema, params)
       json_schema['properties']
         .each_with_object({}) do |key_value, result|
-          parameter_name = key_value[0].to_sym
-          schema = key_value[1]
-          next unless params.key?(parameter_name)
+        parameter_name = key_value[0].to_sym
+        schema = key_value[1]
+        next unless params.key?(parameter_name)
 
-          value = params[parameter_name]
-          result[parameter_name] = parse_parameter(value, schema)
-        end
+        value = params[parameter_name]
+        result[parameter_name] = parse_parameter(value, schema)
+      end
     end
 
     def serialize_query_parameter_errors(validation_errors)
@@ -141,7 +148,7 @@ module OpenapiFirst
 
       return parse_array_parameter(value, schema) if schema['type'] == 'array'
 
-      parse_simple_value(value, schema)
+      TypeCoercion.coerce_value(value, schema)
     end
 
     def parse_array_parameter(value, schema)
@@ -150,26 +157,7 @@ module OpenapiFirst
       array = value.is_a?(Array) ? value : value.split(',')
       return array unless schema['items']
 
-      array.map! { |e| parse_simple_value(e, schema['items']) }
-    end
-
-    def parse_simple_value(value, schema)
-      return to_boolean(value) if schema['type'] == 'boolean'
-
-      begin
-        return Integer(value, 10) if schema['type'] == 'integer'
-        return Float(value) if schema['type'] == 'number'
-      rescue ArgumentError
-        value
-      end
-      value
-    end
-
-    def to_boolean(value)
-      return true if value == 'true'
-      return false if value == 'false'
-
-      value
+      array.map! { |e| TypeCoercion.coerce_value(e, schema['items']) }
     end
   end
 end

@@ -1,0 +1,147 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Swagger Petstore XML
+  license:
+    name: MIT
+servers:
+  - url: http://petstore.swagger.io/v1
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      operationId: listPets
+      tags:
+        - pets
+      responses:
+        '200':
+          description: An array of pets
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/PetsXml"
+        '400':
+          description: unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorXml"
+    post:
+      summary: Create a pet
+      operationId: createPets
+      tags:
+        - pets
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/PetRequest"
+      responses:
+        '201':
+          description: Null response
+        '400':
+          description: unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorXml"
+  /pets/{petId}:
+    get:
+      summary: Info for a specific pet
+      operationId: showPetById
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/PetXml"
+        '400':
+          description: unexpected error
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorXml"
+components:
+  schemas:
+    PetRequest:
+      type: object
+      properties:
+        pet:
+          $ref: '#/components/schemas/PetXml'
+      required:
+        - pet
+    PetXml:
+      type: object
+      xml:
+        name: pet
+      required:
+        - id
+        - name
+        - status
+      properties:
+        id:
+          type: integer
+          xml:
+            name: id
+        name:
+          type: string
+          xml:
+            name: name
+        status:
+          type: string
+          xml:
+            name: status
+            attribute: true
+          enum:
+            - available
+            - pending
+            - sold
+        tag:
+          type: string
+          xml:
+            name: tag
+    PetsXml:
+      type: object
+      properties:
+        pets:
+          type: object
+          xml:
+            name: pets
+          properties:
+            pet:
+              oneOf:
+                - $ref: "#/components/schemas/PetXml"
+                - type: array
+                  items:
+                    $ref: "#/components/schemas/PetXml"
+          required:
+            - pet
+      required:
+        - pets
+    ErrorXml:
+      type: object
+      xml:
+        name: error
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          xml:
+            name: code
+        message:
+          type: string
+          xml:
+            name: message

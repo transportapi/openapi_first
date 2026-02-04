@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 1.2.0
+- Add support for xml response validation
+
 ## 1.1.0
 - Add null type for schemas with `nullable` types while loading the schema.
 

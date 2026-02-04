@@ -27,6 +27,7 @@ module OpenapiFirst
     def call(env)
       env[OPERATION] = nil
       response = call_router(env)
+
       if env[OPERATION].nil?
         return @parent_app.call(env) if @parent_app # This should only happen if used via OpenapiFirst.middleware
 
@@ -36,6 +37,8 @@ module OpenapiFirst
       end
 
       response
+    rescue BodyParsingError => e
+      handle_body_parsing_error(exception: e, env: env)
     end
 
     ORIGINAL_PATH = 'openapi_first.path_info'
@@ -56,14 +59,12 @@ module OpenapiFirst
       env[ORIGINAL_PATH] = env[Rack::PATH_INFO]
       env[Rack::PATH_INFO] = Rack::Request.new(env).path
       @router.call(env)
-    rescue BodyParsingError => e
-      handle_body_parsing_error(e)
     ensure
       env[Rack::PATH_INFO] = env.delete(ORIGINAL_PATH) if env[ORIGINAL_PATH]
     end
 
-    def handle_body_parsing_error(exception)
-      err = { title: 'Failed to parse body as application/json', status: '400' }
+    def handle_body_parsing_error(exception:, env:)
+      err = { title: "Failed to parse body as #{env['CONTENT_TYPE']}", status: '400' }
       err[:detail] = exception.cause unless ENV['RACK_ENV'] == 'production'
       errors = [err]
       raise RequestInvalidError, errors if @raise
@@ -86,9 +87,8 @@ module OpenapiFirst
           )
         end
       end
-      raise_error = @raise
       Rack::Builder.app do
-        use BodyParserMiddleware, raise_error: raise_error
+        use BodyParserMiddleware, raise_error: true
         run router
       end
     end
