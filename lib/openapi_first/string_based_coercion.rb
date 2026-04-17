@@ -3,14 +3,11 @@
 require_relative 'type_coercion'
 
 module OpenapiFirst
-  module XmlCoercion
+  module StringBasedCoercion
     module_function
 
-    def xml_content_type?(content_type)
-      return false unless content_type
-
-      media_type = content_type.split(';').first&.strip
-      %w[application/xml text/xml].include?(media_type)
+    def coercible_content_type?(content_type)
+      ContentType.xml?(content_type) || ContentType.form_encoded?(content_type)
     end
 
     def coerce_types(data, schema)

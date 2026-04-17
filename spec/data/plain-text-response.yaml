@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: Plain text test
+  version: '1.0'
+paths:
+  /sms/inbound:
+    post:
+      operationId: receiveInboundSms
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                Content:
+                  type: string
+      responses:
+        '200':
+          description: Accepted or rejected
+          content:
+            text/plain:
+              schema:
+                type: string
+                enum:
+                  - Success
+                  - Fail

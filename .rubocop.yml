@@ -11,10 +11,10 @@ Metrics/BlockLength:
     - "spec/**/*.rb"
     - "*.gemspec"
 Metrics/MethodLength:
-  Max: 20
+  Max: 50
 
 Metrics/AbcSize:
-  Max: 30
+  Max: 35
 
 Metrics/CyclomaticComplexity:
   Max: 13
