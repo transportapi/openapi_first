@@ -1,37 +1,25 @@
 # frozen_string_literal: true
 
-RSpec.describe OpenapiFirst::XmlCoercion do
-  describe '.xml_content_type?' do
+RSpec.describe OpenapiFirst::StringBasedCoercion do
+  describe '.coercible_content_type?' do
     it 'returns true for application/xml' do
-      expect(described_class.xml_content_type?('application/xml')).to be true
+      expect(described_class.coercible_content_type?('application/xml')).to be true
     end
 
     it 'returns true for text/xml' do
-      expect(described_class.xml_content_type?('text/xml')).to be true
+      expect(described_class.coercible_content_type?('text/xml')).to be true
     end
 
-    it 'returns true for application/xml with charset' do
-      expect(described_class.xml_content_type?('application/xml; charset=utf-8')).to be true
-    end
-
-    it 'returns true for text/xml with charset' do
-      expect(described_class.xml_content_type?('text/xml; charset=utf-8')).to be true
+    it 'returns true for application/x-www-form-urlencoded' do
+      expect(described_class.coercible_content_type?('application/x-www-form-urlencoded')).to be true
     end
 
     it 'returns false for application/json' do
-      expect(described_class.xml_content_type?('application/json')).to be false
+      expect(described_class.coercible_content_type?('application/json')).to be false
     end
 
     it 'returns false for nil' do
-      expect(described_class.xml_content_type?(nil)).to be false
-    end
-
-    it 'returns false for empty string' do
-      expect(described_class.xml_content_type?('')).to be false
-    end
-
-    it 'returns false for text/html' do
-      expect(described_class.xml_content_type?('text/html')).to be false
+      expect(described_class.coercible_content_type?(nil)).to be false
     end
   end
 

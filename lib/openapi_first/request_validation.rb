@@ -5,7 +5,7 @@ require 'multi_json'
 require_relative 'inbox'
 require_relative 'use_router'
 require_relative 'validation_format'
-require_relative 'xml_coercion'
+require_relative 'string_based_coercion'
 require_relative 'type_coercion'
 
 module OpenapiFirst
@@ -58,8 +58,8 @@ module OpenapiFirst
       return unless schema
 
       # Convert XML string values to proper types based on schema
-      if XmlCoercion.xml_content_type?(request.content_type) && body.is_a?(Hash)
-        body = XmlCoercion.coerce_types(body, schema.raw_schema)
+      if StringBasedCoercion.coercible_content_type?(request.content_type) && body.is_a?(Hash)
+        body = StringBasedCoercion.coerce_types(body, schema.raw_schema)
       end
 
       errors = schema.validate(body)

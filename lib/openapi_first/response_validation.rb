@@ -7,7 +7,8 @@ require 'multi_json'
 require 'rj_schema'
 require_relative 'use_router'
 require_relative 'validation_format'
-require_relative 'xml_coercion'
+require_relative 'string_based_coercion'
+require_relative 'content_type'
 
 module OpenapiFirst
   class ResponseValidation
@@ -44,11 +45,17 @@ module OpenapiFirst
     def validate_response_body(schema, response, content_type)
       full_body = +''
       response.each { |chunk| full_body << chunk }
+
+      if ContentType.plain_text?(content_type)
+        validate_plain_text(full_body, schema)
+        return
+      end
+
       data = if full_body.empty?
                {}
-             elsif XmlCoercion.xml_content_type?(content_type)
-               parsed = Hash.from_xml(full_body)
-               XmlCoercion.coerce_types(parsed, schema.raw_schema)
+             elsif StringBasedCoercion.coercible_content_type?(content_type)
+               parsed = ContentType.xml?(content_type) ? Hash.from_xml(full_body) : full_body
+               StringBasedCoercion.coerce_types(parsed, schema.raw_schema)
              else
                load_json(full_body)
              end
@@ -70,6 +77,36 @@ module OpenapiFirst
       MultiJson.load(string)
     rescue MultiJson::ParseError
       string
+    end
+
+    def validate_plain_text(body, schema)
+      raw = schema.raw_schema
+      body = body.strip
+
+      if raw['type'] && raw['type'] != 'string'
+        raise ::OpenapiFirst::ResponseBodyInvalidError,
+              "Expected type '#{raw['type']}' but got a plain text response"
+      end
+
+      if raw['enum'] && !raw['enum'].include?(body)
+        raise ::OpenapiFirst::ResponseBodyInvalidError,
+              "Response body '#{body}' is not one of: #{raw['enum'].join(', ')}"
+      end
+
+      if raw['minLength'] && body.length < raw['minLength']
+        raise ::OpenapiFirst::ResponseBodyInvalidError,
+              "Response body is shorter than minLength: #{raw['minLength']}"
+      end
+
+      if raw['maxLength'] && body.length > raw['maxLength']
+        raise ::OpenapiFirst::ResponseBodyInvalidError,
+              "Response body is longer than maxLength: #{raw['maxLength']}"
+      end
+
+      if raw['pattern'] && !body.match?(Regexp.new(raw['pattern'])) # rubocop:disable Style/GuardClause
+        raise ::OpenapiFirst::ResponseBodyInvalidError,
+              "Response body does not match pattern: #{raw['pattern']}"
+      end
     end
   end
 end

@@ -4,7 +4,7 @@ require 'active_support/isolated_execution_state'
 require 'active_support/xml_mini'
 require 'active_support/core_ext/hash/conversions'
 require 'multi_json'
-require_relative 'xml_coercion'
+require_relative 'content_type'
 
 module OpenapiFirst
   class BodyParserMiddleware
@@ -41,7 +41,7 @@ module OpenapiFirst
       return if body.empty?
 
       return MultiJson.load(body) if request.media_type =~ (/json/i) && (request.media_type =~ /json/i)
-      return Hash.from_xml(body) if XmlCoercion.xml_content_type?(request.content_type)
+      return Hash.from_xml(body) if ContentType.xml?(request.content_type)
       return request.POST if request.form_data?
 
       body

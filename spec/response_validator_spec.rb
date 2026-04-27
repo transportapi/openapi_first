@@ -227,4 +227,98 @@ RSpec.describe OpenapiFirst::ResponseValidator do
       end
     end
   end
+
+  describe 'Plain text response with enum validation' do
+    let(:plain_text_spec) { './spec/data/plain-text-response.yaml' }
+    let(:plain_text_validator) { described_class.new(plain_text_spec) }
+    let(:plain_text_headers) { { Rack::CONTENT_TYPE => 'text/plain' } }
+
+    let(:plain_text_request) do
+      env = Rack::MockRequest.env_for('/sms/inbound', method: 'POST')
+      Rack::Request.new(env)
+    end
+
+    describe 'valid plain text response' do
+      it 'accepts Success' do
+        response = Rack::MockResponse.new(200, plain_text_headers, 'Success')
+        expect { plain_text_validator.validate(plain_text_request, response) }.not_to raise_error
+      end
+
+      it 'accepts Fail' do
+        response = Rack::MockResponse.new(200, plain_text_headers, 'Fail')
+        expect { plain_text_validator.validate(plain_text_request, response) }.not_to raise_error
+      end
+    end
+
+    describe 'invalid plain text response' do
+      it 'fails when body is not in the enum' do
+        response = Rack::MockResponse.new(200, plain_text_headers, 'Invalid')
+        expect do
+          plain_text_validator.validate(plain_text_request, response)
+        end.to raise_error OpenapiFirst::ResponseInvalid
+      end
+
+      it 'fails when body is empty' do
+        response = Rack::MockResponse.new(200, plain_text_headers, '')
+        expect do
+          plain_text_validator.validate(plain_text_request, response)
+        end.to raise_error OpenapiFirst::ResponseInvalid
+      end
+    end
+  end
+
+  # Add alongside the other plain text tests in response_validator_spec.rb
+  # Fixture file: spec/data/plain-text-constrained.yaml
+
+  describe 'Plain text response with length and pattern constraints' do
+    let(:constrained_spec) { './spec/data/plain-text-constrained.yaml' }
+    let(:constrained_validator) { described_class.new(constrained_spec) }
+    let(:plain_text_headers) { { Rack::CONTENT_TYPE => 'text/plain' } }
+
+    let(:constrained_request) do
+      env = Rack::MockRequest.env_for('/status', method: 'GET')
+      Rack::Request.new(env)
+    end
+
+    describe 'valid response' do
+      it 'accepts a value that meets all constraints' do
+        response = Rack::MockResponse.new(200, plain_text_headers, 'ACTIVE')
+        expect { constrained_validator.validate(constrained_request, response) }.not_to raise_error
+      end
+    end
+
+    describe 'minLength violation' do
+      it 'fails when body is too short' do
+        response = Rack::MockResponse.new(200, plain_text_headers, 'OK')
+        expect do
+          constrained_validator.validate(constrained_request, response)
+        end.to raise_error OpenapiFirst::ResponseInvalid
+      end
+    end
+
+    describe 'maxLength violation' do
+      it 'fails when body is too long' do
+        response = Rack::MockResponse.new(200, plain_text_headers, 'UNAVAILABLE')
+        expect do
+          constrained_validator.validate(constrained_request, response)
+        end.to raise_error OpenapiFirst::ResponseInvalid
+      end
+    end
+
+    describe 'pattern violation' do
+      it 'fails when body contains lowercase characters' do
+        response = Rack::MockResponse.new(200, plain_text_headers, 'Active')
+        expect do
+          constrained_validator.validate(constrained_request, response)
+        end.to raise_error OpenapiFirst::ResponseInvalid
+      end
+
+      it 'fails when body contains digits' do
+        response = Rack::MockResponse.new(200, plain_text_headers, 'ABC123')
+        expect do
+          constrained_validator.validate(constrained_request, response)
+        end.to raise_error OpenapiFirst::ResponseInvalid
+      end
+    end
+  end
 end
