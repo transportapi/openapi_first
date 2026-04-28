@@ -6,6 +6,10 @@ RSpec.describe OpenapiFirst::ContentType do
       expect(described_class.json?('application/json')).to be true
     end
 
+    it 'returns true for Application/JSON (i.e. is case insensitive)' do
+      expect(described_class.json?('Application/JSON')).to be true
+    end
+
     it 'returns true for application/json with charset' do
       expect(described_class.json?('application/json; charset=utf-8')).to be true
     end
@@ -25,6 +29,10 @@ RSpec.describe OpenapiFirst::ContentType do
     end
 
     it 'returns true for text/xml' do
+      expect(described_class.xml?('text/xml')).to be true
+    end
+
+    it 'returns true for TEXT/XML (i.e. is case insensitive)' do
       expect(described_class.xml?('text/xml')).to be true
     end
 
@@ -50,6 +58,10 @@ RSpec.describe OpenapiFirst::ContentType do
       expect(described_class.form_encoded?('application/x-www-form-urlencoded; charset=utf-8')).to be true
     end
 
+    it 'returns true for Application/x-www-form-urlencoded (i.e. is case insensitive)' do
+      expect(described_class.form_encoded?('Application/x-www-form-urlencoded')).to be true
+    end
+
     it 'returns false for application/json' do
       expect(described_class.form_encoded?('application/json')).to be false
     end
@@ -66,6 +78,10 @@ RSpec.describe OpenapiFirst::ContentType do
 
     it 'returns true for text/plain with charset' do
       expect(described_class.plain_text?('text/plain; charset=utf-8')).to be true
+    end
+
+    it 'returns true for Text/Plain (i.e. is case insensitive)' do
+      expect(described_class.plain_text?('Text/Plain')).to be true
     end
 
     it 'returns false for application/json' do
