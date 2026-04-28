@@ -1,28 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.describe OpenapiFirst::ContentType do
-  describe '.json?' do
-    it 'returns true for application/json' do
-      expect(described_class.json?('application/json')).to be true
-    end
-
-    it 'returns true for Application/JSON (i.e. is case insensitive)' do
-      expect(described_class.json?('Application/JSON')).to be true
-    end
-
-    it 'returns true for application/json with charset' do
-      expect(described_class.json?('application/json; charset=utf-8')).to be true
-    end
-
-    it 'returns false for application/xml' do
-      expect(described_class.json?('application/xml')).to be false
-    end
-
-    it 'returns false for nil' do
-      expect(described_class.json?(nil)).to be false
-    end
-  end
-
   describe '.xml?' do
     it 'returns true for application/xml' do
       expect(described_class.xml?('application/xml')).to be true

@@ -4,10 +4,6 @@ module OpenapiFirst
   module ContentType
     module_function
 
-    def json?(content_type)
-      matches?(content_type, 'application/json')
-    end
-
     def xml?(content_type)
       matches?(content_type, 'application/xml', 'text/xml')
     end
