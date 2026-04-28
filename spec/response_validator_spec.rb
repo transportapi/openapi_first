@@ -274,9 +274,6 @@ RSpec.describe OpenapiFirst::ResponseValidator do
     end
   end
 
-  # Add alongside the other plain text tests in response_validator_spec.rb
-  # Fixture file: spec/data/plain-text-constrained.yaml
-
   describe 'Plain text response with length and pattern constraints' do
     let(:constrained_spec) { './spec/data/plain-text-constrained.yaml' }
     let(:constrained_validator) { described_class.new(constrained_spec) }
