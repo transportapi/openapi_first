@@ -53,9 +53,8 @@ module OpenapiFirst
 
       data = if full_body.empty?
                {}
-             elsif StringBasedCoercion.coercible_content_type?(content_type)
-               parsed = ContentType.xml?(content_type) ? Hash.from_xml(full_body) : full_body
-               StringBasedCoercion.coerce_types(parsed, schema.raw_schema)
+             elsif ContentType.xml?(content_type)
+               StringBasedCoercion.coerce_types(Hash.from_xml(full_body), schema.raw_schema)
              else
                load_json(full_body)
              end
