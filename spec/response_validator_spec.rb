@@ -264,6 +264,13 @@ RSpec.describe OpenapiFirst::ResponseValidator do
           plain_text_validator.validate(plain_text_request, response)
         end.to raise_error OpenapiFirst::ResponseInvalid
       end
+
+      it 'accepts a value with trailing whitespace' do
+        response = Rack::MockResponse.new(200, plain_text_headers, "Success\n")
+        expect do
+          plain_text_validator.validate(plain_text_request, response)
+        end.not_to raise_error OpenapiFirst::ResponseInvalid
+      end
     end
   end
 

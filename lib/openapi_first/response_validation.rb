@@ -80,6 +80,11 @@ module OpenapiFirst
 
     def validate_plain_text(body, schema)
       raw = schema.raw_schema
+
+      # Strip leading/trailing whitespace from the response body before validation.
+      # HTTP frameworks (e.g. Rails' render plain:) may append a trailing newline
+      # to plain text responses. Stripping ensures validation matches the intended
+      # content rather than failing on transport artifacts.
       body = body.strip
 
       if raw['type'] && raw['type'] != 'string'
