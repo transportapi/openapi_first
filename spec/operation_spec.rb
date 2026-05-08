@@ -498,6 +498,13 @@ RSpec.describe OpenapiFirst::Operation do
       expect(valid).to be true
     end
 
+    it 'returns true for case insensitive match' do
+      operation = described_class.new('/', 'get',
+                                      { 'get' => { 'requestBody' => { 'content' => { 'application/json' => {} } } } })
+      valid = operation.valid_request_content_type?('Application/JSON')
+      expect(valid).to be true
+    end
+
     it 'ignores content type parameters' do
       operation = described_class.new('/', 'get',
                                       { 'get' => { 'requestBody' => { 'content' => { 'application/json' => {} } } } })

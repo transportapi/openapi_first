@@ -434,6 +434,86 @@ RSpec.describe 'Request body validation' do
       end
     end
 
+    describe 'Form-encoded request body coercion' do
+      let(:app) do
+        Rack::Builder.new do
+          use OpenapiFirst::Router, spec: './spec/data/form-encoded-coercion.yaml', raise_error: true
+          use OpenapiFirst::RequestValidation
+          run lambda { |env|
+            [200, {}, [MultiJson.dump(env[OpenapiFirst::REQUEST_BODY])]]
+          }
+        end
+      end
+
+      it 'coerces string values to integer' do
+        header Rack::CONTENT_TYPE, 'application/x-www-form-urlencoded'
+        post '/form-encoded', 'name=Widget&count=42'
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed[:count]).to eq(42)
+      end
+
+      it 'coerces string values to number' do
+        header Rack::CONTENT_TYPE, 'application/x-www-form-urlencoded'
+        post '/form-encoded', 'name=Widget&count=1&price=19.99'
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed[:price]).to eq(19.99)
+      end
+
+      it 'coerces string values to boolean' do
+        header Rack::CONTENT_TYPE, 'application/x-www-form-urlencoded'
+        post '/form-encoded', 'name=Widget&count=1&active=true'
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed[:active]).to be true
+      end
+
+      it 'preserves string values' do
+        header Rack::CONTENT_TYPE, 'application/x-www-form-urlencoded'
+        post '/form-encoded', 'name=Widget&count=1'
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed[:name]).to eq('Widget')
+      end
+
+      it 'validates coerced values against schema' do
+        header Rack::CONTENT_TYPE, 'application/x-www-form-urlencoded'
+        post '/form-encoded', 'name=Widget&count=not-a-number'
+
+        expect(last_response.status).to eq(400)
+      end
+
+      it 'returns 400 when required field is missing' do
+        header Rack::CONTENT_TYPE, 'application/x-www-form-urlencoded'
+        post '/form-encoded', 'name=Widget'
+
+        expect(last_response.status).to eq(400)
+      end
+
+      it 'handles case-insensitive content type' do
+        header Rack::CONTENT_TYPE, 'Application/X-WWW-Form-Urlencoded'
+        post '/form-encoded', 'name=Widget&count=42'
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed[:count]).to eq(42)
+      end
+
+      it 'coerces array values to their item type' do
+        header Rack::CONTENT_TYPE, 'application/x-www-form-urlencoded'
+        post '/form-encoded', 'name=Widget&count=1&tags[]=10&tags[]=20&tags[]=30'
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed[:tags]).to eq([10, 20, 30])
+      end
+    end
+
     describe 'raise_error: true' do
       let(:raise_error_option) { true }
 

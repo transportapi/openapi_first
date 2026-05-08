@@ -117,7 +117,7 @@ module OpenapiFirst
 
     def find_content_for_content_type(content, request_content_type)
       content.fetch(request_content_type) do |_|
-        type = request_content_type.split(';')[0]
+        type = request_content_type.split(';')[0]&.strip&.downcase
         content[type] || content["#{type.split('/')[0]}/*"] || content['*/*']
       end
     end

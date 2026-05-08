@@ -57,7 +57,7 @@ module OpenapiFirst
       schema = operation&.request_body_schema(request.content_type)
       return unless schema
 
-      # Convert XML string values to proper types based on schema
+      # Convert string values to proper types based on schema (applies to XML and form-encoded content)
       if StringBasedCoercion.coercible_content_type?(request.content_type) && body.is_a?(Hash)
         body = StringBasedCoercion.coerce_types(body, schema.raw_schema)
       end

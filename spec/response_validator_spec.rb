@@ -264,11 +264,15 @@ RSpec.describe OpenapiFirst::ResponseValidator do
           plain_text_validator.validate(plain_text_request, response)
         end.to raise_error OpenapiFirst::ResponseInvalid
       end
+
+      it 'accepts a value with trailing whitespace' do
+        response = Rack::MockResponse.new(200, plain_text_headers, "Success\n")
+        expect do
+          plain_text_validator.validate(plain_text_request, response)
+        end.not_to raise_error
+      end
     end
   end
-
-  # Add alongside the other plain text tests in response_validator_spec.rb
-  # Fixture file: spec/data/plain-text-constrained.yaml
 
   describe 'Plain text response with length and pattern constraints' do
     let(:constrained_spec) { './spec/data/plain-text-constrained.yaml' }

@@ -28,7 +28,7 @@ module OpenapiFirst
                         # Array - coerce each item
                         coerce_array(value, property_schema)
                       elsif property_schema['type'] == 'array' && value.is_a?(Hash)
-                        # Single item that should be array (XML quirk from Hash.from_xml)
+                        # XML quirk: Hash.from_xml parses a single child element as Hash instead of Array
                         [coerce_item(value, property_schema['items'])]
                       else
                         # Simple value - coerce based on type
