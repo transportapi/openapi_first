@@ -269,7 +269,7 @@ RSpec.describe OpenapiFirst::ResponseValidator do
         response = Rack::MockResponse.new(200, plain_text_headers, "Success\n")
         expect do
           plain_text_validator.validate(plain_text_request, response)
-        end.not_to raise_error OpenapiFirst::ResponseInvalid
+        end.not_to raise_error
       end
     end
   end

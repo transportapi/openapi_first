@@ -434,8 +434,6 @@ RSpec.describe 'Request body validation' do
       end
     end
 
-    # Add alongside the 'XML request body coercion' describe block
-
     describe 'Form-encoded request body coercion' do
       let(:app) do
         Rack::Builder.new do
@@ -504,6 +502,15 @@ RSpec.describe 'Request body validation' do
         expect(last_response.status).to eq(200), last_response.body
         parsed = json_load(last_response.body, symbolize_keys: true)
         expect(parsed[:count]).to eq(42)
+      end
+
+      it 'coerces array values to their item type' do
+        header Rack::CONTENT_TYPE, 'application/x-www-form-urlencoded'
+        post '/form-encoded', 'name=Widget&count=1&tags[]=10&tags[]=20&tags[]=30'
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed = json_load(last_response.body, symbolize_keys: true)
+        expect(parsed[:tags]).to eq([10, 20, 30])
       end
     end
 

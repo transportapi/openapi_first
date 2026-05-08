@@ -11,7 +11,7 @@ RSpec.describe OpenapiFirst::ContentType do
     end
 
     it 'returns true for TEXT/XML (i.e. is case insensitive)' do
-      expect(described_class.xml?('text/xml')).to be true
+      expect(described_class.xml?('TEXT/XML')).to be true
     end
 
     it 'returns true for application/xml with charset' do
