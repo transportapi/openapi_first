@@ -23,7 +23,7 @@ paths:
                 price:
                   type: number
                 active:
-                    type: boolean
+                  type: boolean
                 tags:
                   type: array
                   items:
